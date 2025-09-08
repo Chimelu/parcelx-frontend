@@ -19,12 +19,15 @@ import {
   Menu,
   X,
   LogOut,
-  Home
+  Home,
+  ArrowLeft
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [orders, setOrders] = useState([
     {
       id: 'PX123456789',
@@ -34,7 +37,8 @@ const AdminPage = () => {
       status: 'delivered',
       date: '2024-01-15',
       weight: '2.5 lbs',
-      value: '$150.00'
+      value: '$150.00',
+      expectedDelivery: '2024-01-15'
     },
     {
       id: 'PX987654321',
@@ -44,7 +48,8 @@ const AdminPage = () => {
       status: 'in-transit',
       date: '2024-01-16',
       weight: '1.2 lbs',
-      value: '$75.00'
+      value: '$75.00',
+      expectedDelivery: '2024-01-18'
     },
     {
       id: 'PX456789123',
@@ -54,16 +59,23 @@ const AdminPage = () => {
       status: 'pending',
       date: '2024-01-17',
       weight: '3.8 lbs',
-      value: '$200.00'
+      value: '$200.00',
+      expectedDelivery: '2024-01-20'
     }
   ]);
 
   const [newOrder, setNewOrder] = useState({
     customer: '',
+    customerEmail: '',
+    customerPhone: '',
     from: '',
     to: '',
+    packageType: '',
     weight: '',
-    value: ''
+    dimensions: '',
+    value: '',
+    expectedDelivery: '',
+    specialInstructions: ''
   });
 
   const stats = [
@@ -100,11 +112,53 @@ const AdminPage = () => {
       date: new Date().toISOString().split('T')[0]
     };
     setOrders([...orders, order]);
-    setNewOrder({ customer: '', from: '', to: '', weight: '', value: '' });
+    setNewOrder({ 
+      customer: '', 
+      customerEmail: '', 
+      customerPhone: '', 
+      from: '', 
+      to: '', 
+      packageType: '', 
+      weight: '', 
+      dimensions: '', 
+      value: '', 
+      expectedDelivery: '', 
+      specialInstructions: '' 
+    });
+  };
+
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setOrders(orders.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+  };
+
+  const handleUpdateOrderField = (orderId, field, value) => {
+    setOrders(orders.map(order => 
+      order.id === orderId ? { ...order, [field]: value } : order
+    ));
   };
 
   const handleDeleteOrder = (id) => {
     setOrders(orders.filter(order => order.id !== id));
+  };
+
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setActiveTab('view-order');
+  };
+
+  const handleEditOrder = (order) => {
+    setSelectedOrder(order);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveOrder = (updatedOrder) => {
+    setOrders(orders.map(order => 
+      order.id === updatedOrder.id ? updatedOrder : order
+    ));
+    setIsEditModalOpen(false);
+    setSelectedOrder(null);
   };
 
   const tabs = [
@@ -150,7 +204,7 @@ const AdminPage = () => {
         </div>
       </div>
 
-      <div className="flex relative">
+      <div className="flex relative min-h-screen">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div 
@@ -160,7 +214,7 @@ const AdminPage = () => {
         )}
 
         {/* Sidebar */}
-        <div className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+        <div className={`fixed lg:fixed lg:top-20 lg:left-0 lg:h-[calc(100vh-5rem)] inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
           <div className="flex items-center justify-between p-4 lg:hidden border-b">
@@ -194,7 +248,7 @@ const AdminPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-0">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-64">
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 lg:space-y-8">
@@ -315,30 +369,62 @@ const AdminPage = () => {
                           <td className="px-6 py-4 font-medium text-amber-900">{order.id}</td>
                           <td className="px-6 py-4">{order.customer}</td>
                           <td className="px-6 py-4">
-                            <div className="text-sm">
-                              <div>{order.from}</div>
-                              <div className="text-gray-500">→ {order.to}</div>
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={order.from}
+                                onChange={(e) => handleUpdateOrderField(order.id, 'from', e.target.value)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                              />
+                              <div className="text-gray-500 text-center">→</div>
+                              <input
+                                type="text"
+                                value={order.to}
+                                onChange={(e) => handleUpdateOrderField(order.id, 'to', e.target.value)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                              />
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                              {getStatusIcon(order.status)}
-                              <span>{order.status}</span>
-                            </span>
+                            <select 
+                              value={order.status}
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                              className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(order.status)}`}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="in-transit">In Transit</option>
+                              <option value="delivered">Delivered</option>
+                            </select>
                           </td>
-                          <td className="px-6 py-4">{order.date}</td>
+                          <td className="px-6 py-4">
+                            <input
+                              type="date"
+                              value={order.date}
+                              onChange={(e) => handleUpdateOrderField(order.id, 'date', e.target.value)}
+                              className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                            />
+                          </td>
                           <td className="px-6 py-4 font-semibold text-amber-900">{order.value}</td>
                           <td className="px-6 py-4">
                             <div className="flex space-x-2">
-                              <button className="p-1 text-blue-600 hover:bg-blue-100 rounded">
+                              <button 
+                                onClick={() => handleViewOrder(order)}
+                                className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                title="View Details"
+                              >
                                 <Eye className="h-4 w-4" />
                               </button>
-                              <button className="p-1 text-yellow-600 hover:bg-yellow-100 rounded">
+                              <button 
+                                onClick={() => handleEditOrder(order)}
+                                className="p-1 text-yellow-600 hover:bg-yellow-100 rounded"
+                                title="Edit Order"
+                              >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button 
                                 onClick={() => handleDeleteOrder(order.id)}
                                 className="p-1 text-red-600 hover:bg-red-100 rounded"
+                                title="Delete Order"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -359,30 +445,64 @@ const AdminPage = () => {
                           <p className="font-semibold text-amber-900 text-sm">{order.id}</p>
                           <p className="text-gray-600 text-sm">{order.customer}</p>
                         </div>
-                        <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                          {getStatusIcon(order.status)}
-                          <span>{order.status}</span>
-                        </span>
+                        <select 
+                          value={order.status}
+                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                          className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(order.status)}`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="in-transit">In Transit</option>
+                          <option value="delivered">Delivered</option>
+                        </select>
                       </div>
-                      <div className="text-sm">
+                      <div className="text-sm space-y-2">
                         <div className="text-gray-600">Route:</div>
-                        <div className="font-medium">{order.from} → {order.to}</div>
+                        <input
+                          type="text"
+                          value={order.from}
+                          onChange={(e) => handleUpdateOrderField(order.id, 'from', e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="From address"
+                        />
+                        <div className="text-gray-500 text-center">→</div>
+                        <input
+                          type="text"
+                          value={order.to}
+                          onChange={(e) => handleUpdateOrderField(order.id, 'to', e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="To address"
+                        />
                       </div>
                       <div className="flex justify-between items-center">
-                        <div className="text-sm">
-                          <div className="text-gray-600">Date: {order.date}</div>
+                        <div className="text-sm space-y-2">
+                          <div className="text-gray-600">Date:</div>
+                          <input
+                            type="date"
+                            value={order.date}
+                            onChange={(e) => handleUpdateOrderField(order.id, 'date', e.target.value)}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                          />
                           <div className="font-semibold text-amber-900">Value: {order.value}</div>
                         </div>
                         <div className="flex space-x-2">
-                          <button className="p-2 text-blue-600 hover:bg-blue-100 rounded">
+                          <button 
+                            onClick={() => handleViewOrder(order)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded"
+                            title="View Details"
+                          >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button className="p-2 text-yellow-600 hover:bg-yellow-100 rounded">
+                          <button 
+                            onClick={() => handleEditOrder(order)}
+                            className="p-2 text-yellow-600 hover:bg-yellow-100 rounded"
+                            title="Edit Order"
+                          >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => handleDeleteOrder(order.id)}
                             className="p-2 text-red-600 hover:bg-red-100 rounded"
+                            title="Delete Order"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -407,75 +527,172 @@ const AdminPage = () => {
                 <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
                 <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
                 <form onSubmit={handleAddOrder} className="space-y-4 lg:space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-amber-900 mb-2">
-                        Customer Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={newOrder.customer}
-                        onChange={(e) => setNewOrder({...newOrder, customer: e.target.value})}
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                        placeholder="Enter customer name"
-                      />
+                  {/* Customer Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-amber-900 mb-4">Customer Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Customer Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.customer}
+                          onChange={(e) => setNewOrder({...newOrder, customer: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="Enter customer name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Customer Email *
+                        </label>
+                        <input
+                          type="email"
+                          value={newOrder.customerEmail}
+                          onChange={(e) => setNewOrder({...newOrder, customerEmail: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="customer@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Customer Phone *
+                        </label>
+                        <input
+                          type="tel"
+                          value={newOrder.customerPhone}
+                          onChange={(e) => setNewOrder({...newOrder, customerPhone: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
                     </div>
-                    <div>
+                  </div>
+
+                  {/* Shipping Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-amber-900 mb-4">Shipping Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          From Address *
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.from}
+                          onChange={(e) => setNewOrder({...newOrder, from: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="e.g., New York, NY"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          To Address *
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.to}
+                          onChange={(e) => setNewOrder({...newOrder, to: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="e.g., Los Angeles, CA"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4">
                       <label className="block text-sm font-medium text-amber-900 mb-2">
-                        Package Weight *
+                        Expected Delivery Date *
                       </label>
                       <input
-                        type="text"
-                        value={newOrder.weight}
-                        onChange={(e) => setNewOrder({...newOrder, weight: e.target.value})}
+                        type="date"
+                        value={newOrder.expectedDelivery}
+                        onChange={(e) => setNewOrder({...newOrder, expectedDelivery: e.target.value})}
                         required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                        placeholder="e.g., 2.5 lbs"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-amber-900 mb-2">
-                        From Address *
-                      </label>
-                      <input
-                        type="text"
-                        value={newOrder.from}
-                        onChange={(e) => setNewOrder({...newOrder, from: e.target.value})}
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                        placeholder="e.g., New York, NY"
-                      />
+                  {/* Package Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-amber-900 mb-4">Package Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Package Type *
+                        </label>
+                        <select
+                          value={newOrder.packageType}
+                          onChange={(e) => setNewOrder({...newOrder, packageType: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        >
+                          <option value="">Select package type</option>
+                          <option value="Electronics">Electronics</option>
+                          <option value="Clothing">Clothing</option>
+                          <option value="Documents">Documents</option>
+                          <option value="Fragile">Fragile</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Weight *
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.weight}
+                          onChange={(e) => setNewOrder({...newOrder, weight: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="e.g., 2.5 lbs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Dimensions *
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.dimensions}
+                          onChange={(e) => setNewOrder({...newOrder, dimensions: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="e.g., 12 x 8 x 6 inches"
+                        />
+                      </div>
                     </div>
-                    <div>
+                    <div className="mt-4">
                       <label className="block text-sm font-medium text-amber-900 mb-2">
-                        To Address *
+                        Package Value *
                       </label>
                       <input
                         type="text"
-                        value={newOrder.to}
-                        onChange={(e) => setNewOrder({...newOrder, to: e.target.value})}
+                        value={newOrder.value}
+                        onChange={(e) => setNewOrder({...newOrder, value: e.target.value})}
                         required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                        placeholder="e.g., Los Angeles, CA"
+                        placeholder="e.g., $150.00"
                       />
                     </div>
                   </div>
 
+                  {/* Special Instructions */}
                   <div>
                     <label className="block text-sm font-medium text-amber-900 mb-2">
-                      Package Value *
+                      Special Instructions
                     </label>
-                    <input
-                      type="text"
-                      value={newOrder.value}
-                      onChange={(e) => setNewOrder({...newOrder, value: e.target.value})}
-                      required
+                    <textarea
+                      rows={3}
+                      value={newOrder.specialInstructions}
+                      onChange={(e) => setNewOrder({...newOrder, specialInstructions: e.target.value})}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                      placeholder="e.g., $150.00"
+                      placeholder="Any special handling instructions or notes..."
                     />
                   </div>
 
@@ -486,7 +703,19 @@ const AdminPage = () => {
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => setNewOrder({ customer: '', from: '', to: '', weight: '', value: '' })}
+                      onClick={() => setNewOrder({ 
+                        customer: '', 
+                        customerEmail: '', 
+                        customerPhone: '', 
+                        from: '', 
+                        to: '', 
+                        packageType: '', 
+                        weight: '', 
+                        dimensions: '', 
+                        value: '', 
+                        expectedDelivery: '', 
+                        specialInstructions: '' 
+                      })}
                       className="btn-secondary"
                     >
                       Clear Form
@@ -559,9 +788,321 @@ const AdminPage = () => {
             </div>
           )}
 
+          {/* View Order Tab */}
+          {activeTab === 'view-order' && selectedOrder && (
+            <div className="space-y-4 lg:space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-amber-900 mb-2">Order Details</h2>
+                  <p className="text-gray-600">Complete information for order {selectedOrder.id}</p>
+                </div>
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className="btn-secondary flex items-center space-x-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Back to Orders</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Order Information */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
+                  <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
+                  <h3 className="text-xl font-bold text-amber-900 mb-6">Order Information</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Order ID:</span>
+                      <span className="font-semibold text-amber-900">{selectedOrder.id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Customer:</span>
+                      <span className="font-semibold">{selectedOrder.customer}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
+                        {getStatusIcon(selectedOrder.status)}
+                        <span>{selectedOrder.status}</span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Order Date:</span>
+                      <span className="font-semibold">{selectedOrder.date}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Expected Delivery:</span>
+                      <span className="font-semibold">{selectedOrder.expectedDelivery}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Package Value:</span>
+                      <span className="font-semibold text-amber-900">{selectedOrder.value}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping Information */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
+                  <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
+                  <h3 className="text-xl font-bold text-amber-900 mb-6">Shipping Information</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-gray-600 block mb-2">From Address:</span>
+                      <span className="font-semibold">{selectedOrder.from}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 block mb-2">To Address:</span>
+                      <span className="font-semibold">{selectedOrder.to}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Weight:</span>
+                      <span className="font-semibold">{selectedOrder.weight}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button 
+                  onClick={() => handleEditOrder(selectedOrder)}
+                  className="btn-primary flex items-center justify-center space-x-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span>Edit Order</span>
+                </button>
+                <button 
+                  onClick={() => handleDeleteOrder(selectedOrder.id)}
+                  className="btn-secondary flex items-center justify-center space-x-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete Order</span>
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
+
+      {/* Edit Order Modal */}
+      {isEditModalOpen && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-amber-900">Edit Order</h3>
+                <button 
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <EditOrderForm 
+                order={selectedOrder} 
+                onSave={handleSaveOrder}
+                onCancel={() => setIsEditModalOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
+
+// Edit Order Form Component
+const EditOrderForm = ({ order, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    customer: order.customer || '',
+    customerEmail: order.customerEmail || '',
+    customerPhone: order.customerPhone || '',
+    from: order.from || '',
+    to: order.to || '',
+    packageType: order.packageType || '',
+    weight: order.weight || '',
+    dimensions: order.dimensions || '',
+    value: order.value || '',
+    expectedDelivery: order.expectedDelivery || '',
+    specialInstructions: order.specialInstructions || '',
+    status: order.status || 'pending'
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ ...order, ...formData });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Customer Information */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="text-lg font-semibold text-amber-900 mb-4">Customer Information</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Customer Name *</label>
+            <input
+              type="text"
+              value={formData.customer}
+              onChange={(e) => setFormData({...formData, customer: e.target.value})}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Customer Email</label>
+            <input
+              type="email"
+              value={formData.customerEmail}
+              onChange={(e) => setFormData({...formData, customerEmail: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Customer Phone</label>
+            <input
+              type="tel"
+              value={formData.customerPhone}
+              onChange={(e) => setFormData({...formData, customerPhone: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Status</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            >
+              <option value="pending">Pending</option>
+              <option value="in-transit">In Transit</option>
+              <option value="delivered">Delivered</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Shipping Information */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="text-lg font-semibold text-amber-900 mb-4">Shipping Information</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">From Address *</label>
+            <input
+              type="text"
+              value={formData.from}
+              onChange={(e) => setFormData({...formData, from: e.target.value})}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">To Address *</label>
+            <input
+              type="text"
+              value={formData.to}
+              onChange={(e) => setFormData({...formData, to: e.target.value})}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Expected Delivery</label>
+            <input
+              type="date"
+              value={formData.expectedDelivery}
+              onChange={(e) => setFormData({...formData, expectedDelivery: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Package Type</label>
+            <select
+              value={formData.packageType}
+              onChange={(e) => setFormData({...formData, packageType: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            >
+              <option value="">Select package type</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Documents">Documents</option>
+              <option value="Fragile">Fragile</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Package Information */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="text-lg font-semibold text-amber-900 mb-4">Package Information</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Weight</label>
+            <input
+              type="text"
+              value={formData.weight}
+              onChange={(e) => setFormData({...formData, weight: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Dimensions</label>
+            <input
+              type="text"
+              value={formData.dimensions}
+              onChange={(e) => setFormData({...formData, dimensions: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Value</label>
+            <input
+              type="text"
+              value={formData.value}
+              onChange={(e) => setFormData({...formData, value: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-amber-900 mb-2">Special Instructions</label>
+          <textarea
+            rows={3}
+            value={formData.specialInstructions}
+            onChange={(e) => setFormData({...formData, specialInstructions: e.target.value})}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            placeholder="Any special handling instructions or notes..."
+          />
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-end">
+        <button 
+          type="button"
+          onClick={onCancel}
+          className="btn-secondary"
+        >
+          Cancel
+        </button>
+        <button 
+          type="submit"
+          className="btn-primary flex items-center justify-center space-x-2"
+        >
+          <CheckCircle className="h-4 w-4" />
+          <span>Save Changes</span>
+        </button>
+      </div>
+    </form>
   );
 };
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Package, Truck, MapPin, UserCheck, CheckCircle, Calendar, Clock } from 'lucide-react';
+import { Search, Package, Truck, MapPin, UserCheck, CheckCircle, Calendar, Clock, Users, Mail, Phone } from 'lucide-react';
 
 const TrackingPage = () => {
   const [trackingId, setTrackingId] = useState('');
@@ -10,7 +10,17 @@ const TrackingPage = () => {
   const mockTrackingData = {
     trackingId: 'PX123456789',
     status: 'delivered',
-    expectedDelivery: '2024-01-15',
+    customerInfo: {
+      name: 'John Smith',
+      email: 'john.smith@email.com',
+      phone: '(555) 123-4567',
+      address: '123 Main Street, Los Angeles, CA 90210'
+    },
+    expectedDelivery: {
+      date: '2024-01-15',
+      day: 'Monday',
+      time: 'By 6:00 PM'
+    },
     packageInfo: {
       type: 'Electronics',
       weight: '2.5 lbs',
@@ -56,7 +66,11 @@ const TrackingPage = () => {
         date: '2024-01-15',
         time: '11:30 AM',
         location: 'Los Angeles, CA',
-        proofOfDelivery: 'Signature: John Smith'
+        proofOfDelivery: {
+          type: 'image',
+          url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=200&fit=crop&crop=center',
+          alt: 'Proof of delivery signature'
+        }
       }
     ]
   };
@@ -95,125 +109,231 @@ const TrackingPage = () => {
         </div>
 
         {/* Tracking Search */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 relative overflow-hidden">
-          {/* Decorative Curves */}
-          <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
-          <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
-          <form onSubmit={handleTrackPackage} className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                value={trackingId}
-                onChange={(e) => setTrackingId(e.target.value)}
-                placeholder="Enter tracking number (e.g., PX123456789)"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parcelx-gold focus:border-transparent"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary flex items-center justify-center space-x-2 px-8 py-3"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-parcelx-brown"></div>
-                  <span>Tracking...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="h-5 w-5" />
-                  <span>Track Package</span>
-                </>
-              )}
-            </button>
-          </form>
-        </div>
+        {!trackingResult && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 relative overflow-hidden">
+            {/* Decorative Curves */}
+            <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
+            <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
+            <form onSubmit={handleTrackPackage} className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={trackingId}
+                  onChange={(e) => setTrackingId(e.target.value)}
+                  placeholder="Enter tracking number (e.g., PX123456789)"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn-primary flex items-center justify-center space-x-2 px-8 py-3"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-900"></div>
+                    <span>Tracking...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-5 w-5" />
+                    <span>Track Package</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Tracking Results */}
         {trackingResult && (
           <div className="space-y-8">
-            {/* Package Status */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 relative overflow-hidden">
+            {/* Track Another Package Button */}
+            <div className="text-center">
+              <button
+                onClick={() => {
+                  setTrackingResult(null);
+                  setTrackingId('');
+                }}
+                className="btn-secondary flex items-center justify-center space-x-2 mx-auto"
+              >
+                <Search className="h-4 w-4" />
+                <span>Track Another Package</span>
+              </button>
+            </div>
+            {/* Customer Information */}
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8 relative overflow-hidden">
               {/* Decorative Curves */}
               <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
               <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
-              <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-amber-900 mb-6">
+                Customer Information
+              </h2>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                      <Users className="h-5 w-5 text-amber-900" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Customer Name</div>
+                      <div className="font-semibold text-amber-900">{trackingResult.customerInfo.name}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                      <Mail className="h-5 w-5 text-amber-900" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Email Address</div>
+                      <div className="font-semibold text-amber-900">{trackingResult.customerInfo.email}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-amber-900" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Phone Number</div>
+                      <div className="font-semibold text-amber-900">{trackingResult.customerInfo.phone}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                      <MapPin className="h-5 w-5 text-amber-900" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Delivery Address</div>
+                      <div className="font-semibold text-amber-900">{trackingResult.customerInfo.address}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Package Status */}
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8 relative overflow-hidden">
+              {/* Decorative Curves */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-amber-900">
+                  <h2 className="text-xl sm:text-2xl font-bold text-amber-900">
                     Package Status
                   </h2>
-                  <p className="text-gray-600">Tracking ID: {trackingResult.trackingId}</p>
+                  <p className="text-sm sm:text-base text-gray-600">Tracking ID: {trackingResult.trackingId}</p>
                 </div>
-                <div className="text-right">
-                  <div className={`text-2xl font-bold ${getStatusColor(trackingResult.status)}`}>
+                <div className="text-left sm:text-right">
+                  <div className={`text-xl sm:text-2xl font-bold ${getStatusColor(trackingResult.status)}`}>
                     {trackingResult.status.charAt(0).toUpperCase() + trackingResult.status.slice(1)}
                   </div>
-                  <div className="flex items-center text-gray-600 mt-2">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Expected: {trackingResult.expectedDelivery}
+                  <div className="flex items-start sm:items-center text-gray-600 mt-2">
+                    <Calendar className="h-4 w-4 mr-2 mt-1 sm:mt-0 flex-shrink-0" />
+                    <div>
+                      <div className="font-medium text-sm sm:text-base">Expected Delivery:</div>
+                      <div className="text-xs sm:text-sm">{trackingResult.expectedDelivery.day}, {trackingResult.expectedDelivery.date}</div>
+                      <div className="text-xs sm:text-sm text-yellow-600">{trackingResult.expectedDelivery.time}</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Package Information */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <h3 className="font-semibold text-amber-900 mb-2">Package Type</h3>
-                  <p className="text-gray-600">{trackingResult.packageInfo.type}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                <div className="bg-gray-100 p-3 sm:p-4 rounded-lg">
+                  <h3 className="font-semibold text-amber-900 mb-2 text-sm sm:text-base">Package Type</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">{trackingResult.packageInfo.type}</p>
                 </div>
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <h3 className="font-semibold text-amber-900 mb-2">Weight</h3>
-                  <p className="text-gray-600">{trackingResult.packageInfo.weight}</p>
+                <div className="bg-gray-100 p-3 sm:p-4 rounded-lg">
+                  <h3 className="font-semibold text-amber-900 mb-2 text-sm sm:text-base">Weight</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">{trackingResult.packageInfo.weight}</p>
                 </div>
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <h3 className="font-semibold text-amber-900 mb-2">Dimensions</h3>
-                  <p className="text-gray-600">{trackingResult.packageInfo.dimensions}</p>
+                <div className="bg-gray-100 p-3 sm:p-4 rounded-lg sm:col-span-2 lg:col-span-1">
+                  <h3 className="font-semibold text-amber-900 mb-2 text-sm sm:text-base">Dimensions</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">{trackingResult.packageInfo.dimensions}</p>
                 </div>
               </div>
             </div>
 
             {/* Timeline */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 relative overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8 relative overflow-hidden">
               {/* Decorative Curves */}
               <div className="absolute top-0 left-0 w-20 h-20 bg-yellow-500/10 rounded-br-full"></div>
               <div className="absolute bottom-0 right-0 w-16 h-16 bg-amber-500/10 rounded-tl-full"></div>
-              <h2 className="text-2xl font-bold text-amber-900 mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-amber-900 mb-6 px-2 sm:px-0">
                 Delivery Timeline
               </h2>
-              <div className="space-y-6">
-                {trackingResult.timeline.map((step, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                      step.completed 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-gray-200 text-gray-500'
-                    }`}>
-                      {step.completed ? step.icon : <Clock className="h-6 w-6" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className={`text-lg font-semibold ${
-                          step.completed ? 'text-amber-900' : 'text-gray-500'
+              <div className="relative">
+                {/* Connecting Line */}
+                <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-gray-200"></div>
+                <div className="space-y-6">
+                  {trackingResult.timeline.map((step, index) => (
+                    <div key={index} className="relative flex items-start space-x-4">
+                      {/* Status Icon with Line Connection */}
+                      <div className="relative flex-shrink-0">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center relative z-10 ${
+                          step.completed 
+                            ? 'bg-green-500 text-white shadow-lg' 
+                            : 'bg-gray-200 text-gray-500'
                         }`}>
-                          {step.status}
-                        </h3>
-                        <div className="text-sm text-gray-500">
-                          {step.date} at {step.time}
+                          {step.completed ? step.icon : <Clock className="h-6 w-6" />}
                         </div>
+                        {/* Connecting line to next item */}
+                        {index < trackingResult.timeline.length - 1 && (
+                          <div className={`absolute top-12 left-1/2 transform -translate-x-1/2 w-0.5 h-6 ${
+                            step.completed ? 'bg-green-500' : 'bg-gray-200'
+                          }`}></div>
+                        )}
                       </div>
-                      <p className="text-gray-600 mt-1">{step.location}</p>
-                      {step.proofOfDelivery && (
-                        <div className="mt-2 p-2 bg-green-500/10 rounded border-l-4 border-parcelx-green">
-                          <p className="text-sm text-green-500 font-medium">
-                            Proof of Delivery: {step.proofOfDelivery}
-                          </p>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 pb-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <h3 className={`text-base sm:text-lg font-semibold ${
+                            step.completed ? 'text-amber-900' : 'text-gray-500'
+                          }`}>
+                            {step.status}
+                          </h3>
+                          <div className="text-xs sm:text-sm text-gray-500">
+                            {step.date} at {step.time}
+                          </div>
                         </div>
-                      )}
+                        <p className="text-sm sm:text-base text-gray-600 mt-1">{step.location}</p>
+                        
+                        {/* Proof of Delivery - Mobile Optimized */}
+                        {step.proofOfDelivery && (
+                          <div className="mt-3 p-3 bg-green-500/10 rounded-lg border-l-4 border-green-500">
+                            <p className="text-xs sm:text-sm text-green-600 font-medium mb-2">
+                              Proof of Delivery:
+                            </p>
+                            <div className="bg-white rounded-lg p-2 shadow-sm">
+                              <img 
+                                src={step.proofOfDelivery.url} 
+                                alt={step.proofOfDelivery.alt}
+                                className="w-full max-w-xs sm:max-w-sm rounded border"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'block';
+                                }}
+                              />
+                              <div className="hidden text-xs sm:text-sm text-gray-500 italic">
+                                Signature captured: John Smith
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
