@@ -1,5 +1,7 @@
 import Hero from '../components/Hero';
 import Services from '../components/Services';
+import { Shield, Clock, Users, Award, ArrowRight, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const HomePage = () => {
   return (
@@ -8,100 +10,120 @@ const HomePage = () => {
       <Services />
       
       {/* Why Choose ParcelX Section */}
-      <section className="py-16 bg-white relative">
-        {/* Curved Section Divider */}
-        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-r from-transparent via-yellow-500 to-transparent rounded-b-full"></div>
-        {/* Decorative Curves */}
-        <div className="absolute top-0 left-1/4 w-16 h-16 bg-yellow-500/20 rounded-full -translate-y-8"></div>
-        <div className="absolute top-0 right-1/4 w-12 h-12 bg-yellow-500/30 rounded-full -translate-y-6"></div>
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-slide-in-right">
-            <h2 className="text-3xl md:text-4xl font-bold text-amber-900 mb-4">
-              Why Choose ParcelX?
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold text-amber-900 mb-6">
+              Enterprise-Grade Solutions
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              We deliver more than packages - we deliver peace of mind with every shipment.
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+              Built for businesses that demand reliability, security, and exceptional service quality
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center group hover:scale-105 transition-transform duration-300 relative">
-              <div className="absolute top-0 right-0 w-12 h-12 bg-yellow-500/20 rounded-bl-full"></div>
-              <div className="bg-yellow-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <span className="text-2xl">🚚</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="group hover:scale-105 transition-all duration-300">
+              <div className="bg-white rounded-2xl shadow-lg p-8 h-full border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                <div className="bg-gradient-to-br from-yellow-500 to-amber-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Shield className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-amber-900 mb-4 text-center">
+                  Advanced Security
+                </h3>
+                <p className="text-gray-600 text-center leading-relaxed">
+                  Multi-layered security protocols with comprehensive insurance coverage and real-time monitoring.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-amber-900 mb-3">
-                Fast Delivery
-              </h3>
-              <p className="text-gray-600">
-                Same-day and next-day delivery options across major cities with real-time tracking.
-              </p>
             </div>
 
-            <div className="text-center group hover:scale-105 transition-transform duration-300 relative">
-              <div className="absolute top-0 left-0 w-12 h-12 bg-yellow-500/20 rounded-br-full"></div>
-              <div className="bg-yellow-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <span className="text-2xl">🔒</span>
+            <div className="group hover:scale-105 transition-all duration-300">
+              <div className="bg-white rounded-2xl shadow-lg p-8 h-full border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                <div className="bg-gradient-to-br from-yellow-500 to-amber-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Clock className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-amber-900 mb-4 text-center">
+                  Precision Timing
+                </h3>
+                <p className="text-gray-600 text-center leading-relaxed">
+                  Guaranteed delivery windows with predictive analytics and optimized routing algorithms.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-amber-900 mb-3">
-                Secure Handling
-              </h3>
-              <p className="text-gray-600">
-                Your packages are protected with advanced security measures and insurance coverage.
-              </p>
             </div>
 
-            <div className="text-center group hover:scale-105 transition-transform duration-300 relative">
-              <div className="absolute bottom-0 right-0 w-12 h-12 bg-yellow-500/20 rounded-tl-full"></div>
-              <div className="bg-yellow-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <span className="text-2xl">📞</span>
+            <div className="group hover:scale-105 transition-all duration-300">
+              <div className="bg-white rounded-2xl shadow-lg p-8 h-full border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                <div className="bg-gradient-to-br from-yellow-500 to-amber-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Users className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-amber-900 mb-4 text-center">
+                  Dedicated Support
+                </h3>
+                <p className="text-gray-600 text-center leading-relaxed">
+                  Personal account managers and 24/7 technical support for enterprise clients.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-amber-900 mb-3">
-                24/7 Support
-              </h3>
-              <p className="text-gray-600">
-                Round-the-clock customer support to assist you with any questions or concerns.
-              </p>
+            </div>
+
+            <div className="group hover:scale-105 transition-all duration-300">
+              <div className="bg-white rounded-2xl shadow-lg p-8 h-full border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                <div className="bg-gradient-to-br from-yellow-500 to-amber-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Award className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-amber-900 mb-4 text-center">
+                  Industry Recognition
+                </h3>
+                <p className="text-gray-600 text-center leading-relaxed">
+                  Certified excellence with ISO standards and industry-leading performance metrics.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-amber-900 text-white relative overflow-hidden">
-        {/* Curved Section Divider */}
-        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-r from-transparent via-yellow-500 to-transparent rounded-b-full"></div>
-        {/* Decorative Curves */}
-        <div className="absolute top-0 left-1/3 w-20 h-20 bg-yellow-500/20 rounded-full -translate-y-10"></div>
-        <div className="absolute top-0 right-1/3 w-14 h-14 bg-yellow-500/30 rounded-full -translate-y-7"></div>
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-10">
-          <div className="absolute top-10 left-10 w-20 h-20 border-2 border-yellow-500 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-10 right-10 w-16 h-16 border-2 border-yellow-500 rounded-full animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 right-1/4 w-12 h-12 border-2 border-yellow-500 rounded-full animate-pulse delay-500"></div>
-        </div>
-        
+      <section className="py-20 bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="animate-scale-in relative">
-            {/* Decorative Curves */}
-            <div className="absolute -top-4 left-1/4 w-8 h-8 bg-yellow-500/30 rounded-full"></div>
-            <div className="absolute -top-2 right-1/4 w-6 h-6 bg-yellow-500/40 rounded-full"></div>
-            <div className="absolute -bottom-4 left-1/3 w-10 h-10 bg-yellow-500/20 rounded-full"></div>
-            
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Ready to Ship?
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              Transform Your Logistics Operations
             </h2>
-            <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
-              Join thousands of satisfied customers who trust ParcelX for their shipping needs.
+            <p className="text-xl text-gray-200 mb-12 leading-relaxed">
+              Partner with America's most trusted logistics provider and experience 
+              the difference that enterprise-grade solutions can make for your business.
             </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="btn-primary text-lg px-8 py-4 transform hover:scale-105 hover:shadow-xl transition-all duration-300 hover:rotate-1">
-              Get Started Today
-            </button>
-            <button className="bg-transparent border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-amber-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300 text-lg transform hover:scale-105 hover:shadow-xl hover:-rotate-1">
-              Learn More
-            </button>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="h-6 w-6 text-yellow-500 flex-shrink-0" />
+                <span className="text-lg">No Setup Fees</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="h-6 w-6 text-yellow-500 flex-shrink-0" />
+                <span className="text-lg">Volume Discounts</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="h-6 w-6 text-yellow-500 flex-shrink-0" />
+                <span className="text-lg">Custom Solutions</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link 
+                to="/services"
+                className="bg-yellow-500 hover:bg-yellow-400 text-amber-900 px-10 py-4 rounded-lg font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-3"
+              >
+                <span>Start Your Journey</span>
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link 
+                to="/contact"
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-amber-900 px-10 py-4 rounded-lg font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Schedule Consultation
+              </Link>
+            </div>
           </div>
         </div>
       </section>

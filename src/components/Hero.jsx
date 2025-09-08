@@ -1,8 +1,65 @@
 import { Search, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
 import hero from '../../public/ParcelXHero.png'
 
 const Hero = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [counts, setCounts] = useState({
+    successRate: 0,
+    cities: 0,
+    support: '24/7'
+  });
+  const statsRef = useRef(null);
+
+  // Intersection Observer to trigger animation when stats come into view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+          startCounting();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (statsRef.current) {
+      observer.observe(statsRef.current);
+    }
+
+    return () => {
+      if (statsRef.current) {
+        observer.unobserve(statsRef.current);
+      }
+    };
+  }, [isVisible]);
+
+  const startCounting = () => {
+    // Animate success rate from 0 to 99.9
+    const successRateInterval = setInterval(() => {
+      setCounts(prev => {
+        if (prev.successRate < 99.9) {
+          return { ...prev, successRate: prev.successRate + 0.1 };
+        } else {
+          clearInterval(successRateInterval);
+          return { ...prev, successRate: 99.9 };
+        }
+      });
+    }, 20);
+
+    // Animate cities from 0 to 50
+    const citiesInterval = setInterval(() => {
+      setCounts(prev => {
+        if (prev.cities < 50) {
+          return { ...prev, cities: prev.cities + 1 };
+        } else {
+          clearInterval(citiesInterval);
+          return { ...prev, cities: 50 };
+        }
+      });
+    }, 40);
+  };
   return (
     <section className="relative text-white overflow-hidden min-h-screen flex items-center">
       {/* Background Image */}
@@ -32,51 +89,58 @@ const Hero = () => {
             <div className="mb-6">
               <Truck className="h-16 w-16 text-yellow-500 mx-auto drop-shadow-lg animate-pulse" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in-up">
-              <span className="inline-block animate-pulse">Fast</span>, 
-              <span className="inline-block animate-pulse delay-100"> Reliable</span>, and 
-              <span> </span> 
-              <span className="inline-block animate-pulse delay-200"> Secure</span>
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 animate-fade-in-up leading-tight">
+              <span className="block text-white mb-2">Premium</span>
+              <span className="block text-yellow-500">Logistics Solutions</span>
             </h1>
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-yellow-500 animate-fade-in-up delay-300">
-              Courier Services Across America
+            <h2 className="text-xl md:text-2xl font-light mb-6 text-gray-200 animate-fade-in-up delay-300 max-w-4xl mx-auto leading-relaxed">
+              Delivering excellence across America with precision, reliability, and unmatched service quality
             </h2>
-            <p className="text-xl text-gray-200 max-w-3xl mx-auto mb-8 animate-fade-in-up delay-500">
-              Experience seamless package delivery with real-time tracking, 
-              secure handling, and exceptional customer service.
+            <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-10 animate-fade-in-up delay-500 leading-relaxed">
+              Trusted by businesses nationwide, we provide comprehensive shipping solutions 
+              backed by cutting-edge technology and dedicated customer support.
             </p>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up delay-700">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up delay-700">
             <Link 
               to="/tracking" 
-              className="btn-primary flex items-center space-x-2 text-lg px-8 py-4 transform hover:scale-105 hover:shadow-xl transition-all duration-300 hover:rotate-1"
+              className="bg-yellow-500 hover:bg-yellow-400 text-amber-900 px-10 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center space-x-3 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <Search className="h-5 w-5 animate-pulse" />
-              <span>Track Your Parcel</span>
+              <Search className="h-5 w-5" />
+              <span>Track Shipment</span>
             </Link>
             <Link 
               to="/services" 
-              className="btn-secondary text-lg px-8 py-4 transform hover:scale-105 hover:shadow-xl transition-all duration-300 hover:-rotate-1"
+              className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-amber-900 px-10 py-4 rounded-lg font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              View Services
+              Explore Solutions
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+          <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-20">
             <div className="text-center group animate-fade-in-up delay-1000">
-              <div className="text-3xl font-bold text-yellow-500 group-hover:scale-110 transition-transform duration-300">99.9%</div>
-              <div className="text-gray-200">Delivery Success Rate</div>
+              <div className="text-4xl md:text-5xl font-bold text-yellow-500 group-hover:scale-110 transition-transform duration-300 mb-2">
+                {counts.successRate.toFixed(1)}%
+              </div>
+              <div className="text-gray-200 text-lg font-medium">Delivery Success Rate</div>
+              <div className="text-gray-400 text-sm mt-1">Industry-leading reliability</div>
             </div>
             <div className="text-center group animate-fade-in-up delay-1100">
-              <div className="text-3xl font-bold text-yellow-500 group-hover:scale-110 transition-transform duration-300">24/7</div>
-              <div className="text-gray-200">Customer Support</div>
+              <div className="text-4xl md:text-5xl font-bold text-yellow-500 group-hover:scale-110 transition-transform duration-300 mb-2">
+                {counts.support}
+              </div>
+              <div className="text-gray-200 text-lg font-medium">Customer Support</div>
+              <div className="text-gray-400 text-sm mt-1">Always available</div>
             </div>
             <div className="text-center group animate-fade-in-up delay-1200">
-              <div className="text-3xl font-bold text-yellow-500 group-hover:scale-110 transition-transform duration-300">50+</div>
-              <div className="text-gray-200">Cities Covered</div>
+              <div className="text-4xl md:text-5xl font-bold text-yellow-500 group-hover:scale-110 transition-transform duration-300 mb-2">
+                {counts.cities}+
+              </div>
+              <div className="text-gray-200 text-lg font-medium">Cities Covered</div>
+              <div className="text-gray-400 text-sm mt-1">Nationwide network</div>
             </div>
           </div>
         </div>

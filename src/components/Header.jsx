@@ -17,13 +17,13 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-amber-900/95 backdrop-blur-md text-white shadow-lg border-b border-amber-800/20 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center py-2 sm:py-3 lg:py-4">
           {/* Logo */}
-          <Link to="/" className="hover:scale-105 transition-transform duration-300">
+          <Link to="/" className="hover:scale-105 transition-transform duration-300 relative">
             <img 
-              src="/logoparcelx.png" 
+              src="/image.png" 
               alt="ParcelX Logo" 
-              className="h-12 w-auto object-contain drop-shadow-sm"
+              className="h-16 sm:h-20 lg:h-24 w-auto object-contain drop-shadow-sm"
             />
           </Link>
 

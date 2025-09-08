@@ -16,7 +16,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Settings,
+  Menu,
+  X,
   LogOut,
   Home
 } from 'lucide-react';
@@ -110,8 +111,7 @@ const AdminPage = () => {
     { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 className="h-5 w-5" /> },
     { id: 'orders', label: 'Orders', icon: <Package className="h-5 w-5" /> },
     { id: 'add-order', label: 'Add Order', icon: <Plus className="h-5 w-5" /> },
-    { id: 'emails', label: 'Send Emails', icon: <Mail className="h-5 w-5" /> },
-    { id: 'settings', label: 'Settings', icon: <Settings className="h-5 w-5" /> }
+    { id: 'emails', label: 'Send Emails', icon: <Mail className="h-5 w-5" /> }
   ];
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -140,7 +140,7 @@ const AdminPage = () => {
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="lg:hidden p-2 hover:bg-amber-800 rounded-lg transition-colors"
               >
-                <Settings className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
               </button>
               <button className="hidden sm:block p-2 hover:bg-amber-800 rounded-lg transition-colors">
                 <LogOut className="h-5 w-5" />
@@ -169,7 +169,7 @@ const AdminPage = () => {
               onClick={() => setSidebarOpen(false)}
               className="p-2 hover:bg-gray-100 rounded-lg"
             >
-              <LogOut className="h-5 w-5" />
+              <X className="h-5 w-5" />
             </button>
           </div>
           <nav className="mt-4 lg:mt-8">
@@ -559,63 +559,6 @@ const AdminPage = () => {
             </div>
           )}
 
-          {/* Settings Tab */}
-          {activeTab === 'settings' && (
-            <div className="space-y-4 lg:space-y-6">
-              <div>
-                <h2 className="text-2xl lg:text-3xl font-bold text-amber-900 mb-2">Settings</h2>
-                <p className="text-gray-600">Configure your admin dashboard and system preferences</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                <div className="bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
-                  <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
-                  <h3 className="text-xl font-bold text-amber-900 mb-4">Profile Settings</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-amber-900 mb-2">Name</label>
-                      <input
-                        type="text"
-                        defaultValue="Admin User"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-amber-900 mb-2">Email</label>
-                      <input
-                        type="email"
-                        defaultValue="admin@parcelx.com"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                      />
-                    </div>
-                    <button className="btn-primary">Update Profile</button>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-bl-full"></div>
-                  <div className="absolute bottom-0 left-0 w-16 h-16 bg-amber-500/10 rounded-tr-full"></div>
-                  <h3 className="text-xl font-bold text-amber-900 mb-4">System Settings</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700">Email Notifications</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700">Auto-update Tracking</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700">Maintenance Mode</span>
-                      <input type="checkbox" className="rounded" />
-                    </div>
-                    <button className="btn-primary">Save Settings</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
