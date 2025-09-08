@@ -9,7 +9,7 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="mb-4">
               <img 
-                src="/logoparcelx.png" 
+                src="/logo3.png" 
                 alt="ParcelX Logo" 
                 className="h-12 w-auto object-contain"
               />

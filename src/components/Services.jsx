@@ -1,27 +1,27 @@
-import { Home, Plane, Zap, Warehouse } from 'lucide-react';
+import { Truck, Globe, Clock, Building2 } from 'lucide-react';
 
 const Services = () => {
   const services = [
     {
-      icon: <Home className="h-12 w-12 text-yellow-500" />,
+      icon: <Truck className="h-12 w-12 text-yellow-500" />,
       title: "Domestic Delivery",
       description: "Fast and reliable delivery within the United States with same-day and next-day options.",
       features: ["Same-day delivery", "Next-day delivery", "Real-time tracking", "Secure handling"]
     },
     {
-      icon: <Plane className="h-12 w-12 text-yellow-500" />,
+      icon: <Globe className="h-12 w-12 text-yellow-500" />,
       title: "International Delivery",
       description: "Global shipping solutions with customs clearance and worldwide delivery coverage.",
       features: ["Global coverage", "Customs clearance", "Express shipping", "Insurance included"]
     },
     {
-      icon: <Zap className="h-12 w-12 text-yellow-500" />,
+      icon: <Clock className="h-12 w-12 text-yellow-500" />,
       title: "Express Shipping",
       description: "Priority shipping for urgent deliveries with guaranteed time commitments.",
       features: ["Priority handling", "Guaranteed delivery", "Express tracking", "Premium support"]
     },
     {
-      icon: <Warehouse className="h-12 w-12 text-yellow-500" />,
+      icon: <Building2 className="h-12 w-12 text-yellow-500" />,
       title: "Warehousing & Logistics",
       description: "Complete supply chain solutions including storage, inventory management, and fulfillment.",
       features: ["Secure storage", "Inventory management", "Order fulfillment", "Distribution network"]
