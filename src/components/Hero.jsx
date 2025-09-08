@@ -1,4 +1,4 @@
-import { Search, Truck } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import hero from '../../public/ParcelXHero.png'
@@ -67,8 +67,8 @@ const Hero = () => {
         className="absolute inset-0 hero-background"
         style={{ 
           backgroundImage: `url(${hero})`,
-          backgroundRepeat: 'repeat-y',
-          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center center',
           backgroundAttachment: 'scroll'
         }}
       ></div>
@@ -86,9 +86,6 @@ const Hero = () => {
         <div className="text-center relative z-10">
           {/* Hero Content */}
           <div className="mb-8">
-            <div className="mb-6">
-              <Truck className="h-16 w-16 text-yellow-500 mx-auto drop-shadow-lg animate-pulse" />
-            </div>
             <h1 className="text-5xl md:text-7xl font-bold mb-8 animate-fade-in-up leading-tight">
               <span className="block text-white mb-2">Premium</span>
               <span className="block text-yellow-500">Logistics Solutions</span>

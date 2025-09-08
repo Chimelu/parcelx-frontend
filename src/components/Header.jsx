@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+
+  // Scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -15,13 +27,17 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-amber-900/95 backdrop-blur-md text-white shadow-lg border-b border-amber-800/20 transition-all duration-300">
+    <header className={`fixed top-0 left-0 right-0 z-50 text-white transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-amber-900/95 backdrop-blur-md shadow-lg border-b border-amber-800/20' 
+        : 'bg-gradient-to-r from-amber-900/80 to-amber-900/60'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-2 sm:py-3 lg:py-4">
+        <div className="flex justify-between items-center py-2 sm:py-3 lg:py-2">
           {/* Logo */}
           <Link to="/" className="hover:scale-105 transition-transform duration-300 relative">
             <img 
-              src="/image.png" 
+              src="/logo3.png" 
               alt="ParcelX Logo" 
               className="h-16 sm:h-20 lg:h-24 w-auto object-contain drop-shadow-sm"
             />

@@ -117,9 +117,10 @@
 /* Mobile-specific hero background fixes */
 @media (max-width: 768px) {
   .hero-background {
-    background-size: cover !important;
-    background-position: center top !important;
-    background-repeat: repeat-y !important;
+    background-size: contain !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    min-height: 100vh !important;
   }
 }
 
