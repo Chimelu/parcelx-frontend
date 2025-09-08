@@ -1,89 +1,107 @@
 import { useState } from 'react';
-import { Search, Package, Truck, MapPin, UserCheck, CheckCircle, Calendar, Clock, Users, Mail, Phone } from 'lucide-react';
+import { Search, Package, Truck, MapPin, UserCheck, CheckCircle, Calendar, Clock, Users, Mail, Phone, Building2 } from 'lucide-react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const TrackingPage = () => {
   const [trackingId, setTrackingId] = useState('');
   const [trackingResult, setTrackingResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock tracking data
-  const mockTrackingData = {
-    trackingId: 'PX123456789',
-    status: 'delivered',
-    customerInfo: {
-      name: 'John Smith',
-      email: 'john.smith@email.com',
-      phone: '(555) 123-4567',
-      address: '123 Main Street, Los Angeles, CA 90210'
-    },
-    expectedDelivery: {
-      date: '2024-01-15',
-      day: 'Monday',
-      time: 'By 6:00 PM'
-    },
-    packageInfo: {
-      type: 'Electronics',
-      weight: '2.5 lbs',
-      dimensions: '12" x 8" x 6"'
-    },
-    timeline: [
-      {
-        status: 'Order Placed',
-        icon: <Package className="h-6 w-6" />,
-        completed: true,
-        date: '2024-01-10',
-        time: '10:30 AM',
-        location: 'New York, NY'
+  // Helper function to get timeline status icon
+  const getTimelineStatusIcon = (status) => {
+    switch (status) {
+      case 'Order Placed':
+        return <Package className="h-6 w-6" />;
+      case 'In Transit':
+        return <Truck className="h-6 w-6" />;
+      case 'At Destination Hub':
+        return <Building2 className="h-6 w-6" />;
+      case 'Out for Delivery':
+        return <UserCheck className="h-6 w-6" />;
+      case 'Delivered':
+        return <CheckCircle className="h-6 w-6" />;
+      default:
+        return <Clock className="h-6 w-6" />;
+    }
+  };
+
+  // Helper function to get current status from timeline
+  const getCurrentStatus = (timeline) => {
+    if (!timeline || timeline.length === 0) return 'Order Placed';
+    return timeline[timeline.length - 1].status;
+  };
+
+  // Helper function to transform API data to frontend format
+  const transformApiData = (apiOrder) => {
+    const currentStatus = getCurrentStatus(apiOrder.timeline);
+    const expectedDeliveryDate = new Date(apiOrder.shipping.expectedDelivery);
+    
+    return {
+      trackingId: apiOrder.trackingId,
+      status: currentStatus.toLowerCase().replace(/\s+/g, '-'),
+      customerInfo: {
+        name: apiOrder.customer.name,
+        email: apiOrder.customer.email,
+        phone: apiOrder.customer.phone,
+        address: apiOrder.customer.address
       },
-      {
-        status: 'In Transit',
-        icon: <Truck className="h-6 w-6" />,
-        completed: true,
-        date: '2024-01-11',
-        time: '2:15 PM',
-        location: 'Philadelphia, PA'
+      expectedDelivery: {
+        date: expectedDeliveryDate.toISOString().split('T')[0],
+        day: expectedDeliveryDate.toLocaleDateString('en-US', { weekday: 'long' }),
+        time: 'By 6:00 PM'
       },
-      {
-        status: 'At Destination Hub',
-        icon: <MapPin className="h-6 w-6" />,
-        completed: true,
-        date: '2024-01-14',
-        time: '9:45 AM',
-        location: 'Los Angeles, CA'
+      packageInfo: {
+        type: apiOrder.package.type,
+        weight: apiOrder.package.weight,
+        dimensions: apiOrder.package.dimensions
       },
-      {
-        status: 'Out for Delivery',
-        icon: <UserCheck className="h-6 w-6" />,
-        completed: true,
-        date: '2024-01-15',
-        time: '8:00 AM',
-        location: 'Los Angeles, CA'
-      },
-      {
-        status: 'Delivered',
-        icon: <CheckCircle className="h-6 w-6" />,
-        completed: true,
-        date: '2024-01-15',
-        time: '11:30 AM',
-        location: 'Los Angeles, CA',
-        proofOfDelivery: {
-          type: 'image',
-          url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=200&fit=crop&crop=center',
-          alt: 'Proof of delivery signature'
-        }
-      }
-    ]
+      timeline: apiOrder.timeline.map(event => ({
+        status: event.status,
+        icon: getTimelineStatusIcon(event.status),
+        completed: event.completed,
+        date: new Date(event.date).toISOString().split('T')[0],
+        time: event.time,
+        location: event.location,
+        proofOfDelivery: event.proofOfDelivery || null
+      }))
+    };
   };
 
   const handleTrackPackage = async (e) => {
     e.preventDefault();
+    
+    if (!trackingId.trim()) {
+      toast.error('Please enter a tracking ID');
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setTrackingResult(mockTrackingData);
+    try {
+      const response = await fetch(`https://parcelx-backend.onrender.com/api/orders/track/${trackingId.trim().toUpperCase()}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          toast.error('Order not found with this tracking ID');
+        } else {
+          toast.error('Failed to fetch tracking information');
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      const transformedData = transformApiData(data.order);
+      setTrackingResult(transformedData);
+      toast.success('Tracking information loaded successfully');
+      
+    } catch (error) {
+      console.error('Tracking error:', error);
+      toast.error('Network error. Please check your connection and try again.');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -97,6 +115,18 @@ const TrackingPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
