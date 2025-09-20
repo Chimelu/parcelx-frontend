@@ -135,7 +135,7 @@ const AdminPage = () => {
   const fetchOrders = async () => {
     setIsLoadingOrders(true);
     try {
-      const response = await fetch('https://parcelx-backend.onrender.com/api/orders');
+      const response = await fetch('https://parcelx-backend.vercel.app/api/orders');
       if (response.ok) {
         const data = await response.json();
         // Transform API data to match local state structure
@@ -193,7 +193,7 @@ const AdminPage = () => {
         }
       };
 
-      const response = await fetch('https://parcelx-backend.onrender.com/api/orders', {
+      const response = await fetch('https://parcelx-backend.vercel.app/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -272,7 +272,7 @@ const AdminPage = () => {
     if (!orderToDelete) return;
     
     try {
-      const response = await fetch(`https://parcelx-backend.onrender.com/api/orders/${orderToDelete.id}`, {
+      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/${orderToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -303,7 +303,7 @@ const AdminPage = () => {
   const handleViewOrder = async (order) => {
     try {
       // Fetch full order details from API using tracking ID
-      const response = await fetch(`https://parcelx-backend.onrender.com/api/orders/track/${order.id}`);
+      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/track/${order.id}`);
       if (response.ok) {
         const data = await response.json();
         // Transform API data to match local state structure
@@ -345,7 +345,7 @@ const AdminPage = () => {
 
   const handleUpdateTimeline = async (orderId) => {
     try {
-      const response = await fetch(`https://parcelx-backend.onrender.com/api/orders/${orderId}/status`, {
+      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -433,7 +433,7 @@ const AdminPage = () => {
       }
 
       // Make API call to update the order
-      const response = await fetch(`https://parcelx-backend.onrender.com/api/orders/${orderToUpdate.id}`, {
+      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/${orderToUpdate.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

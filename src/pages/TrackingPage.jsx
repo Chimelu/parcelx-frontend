@@ -79,7 +79,7 @@ const TrackingPage = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`https://parcelx-backend.onrender.com/api/orders/track/${trackingId.trim().toUpperCase()}`);
+      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/track/${trackingId.trim().toUpperCase()}`);
       
       if (!response.ok) {
         if (response.status === 404) {
