@@ -37,9 +37,16 @@ const TrackingPage = () => {
     const currentStatus = getCurrentStatus(apiOrder.timeline);
     const expectedDeliveryDate = new Date(apiOrder.shipping.expectedDelivery);
     
+    // All timeline events are completed since they're in the history
+    const timelineLength = apiOrder.timeline ? apiOrder.timeline.length : 0;
+    
     return {
       trackingId: apiOrder.trackingId,
       status: currentStatus.toLowerCase().replace(/\s+/g, '-'),
+      shippingInfo: {
+        from: apiOrder.shipping.from || 'Origin location',
+        to: apiOrder.shipping.to || 'Destination location'
+      },
       customerInfo: {
         name: apiOrder.customer.name,
         email: apiOrder.customer.email,
@@ -56,12 +63,13 @@ const TrackingPage = () => {
         weight: apiOrder.package.weight,
         dimensions: apiOrder.package.dimensions
       },
-      timeline: apiOrder.timeline.map(event => ({
+      timeline: (apiOrder.timeline || []).map((event, index) => ({
         status: event.status,
         icon: getTimelineStatusIcon(event.status),
-        completed: event.completed,
+        // All events in timeline are completed (they've already happened)
+        completed: true,
         date: new Date(event.date).toISOString().split('T')[0],
-        time: event.time,
+        time: event.time || '00:00',
         location: event.location,
         proofOfDelivery: event.proofOfDelivery || null
       }))
@@ -276,6 +284,24 @@ const TrackingPage = () => {
                 </div>
               </div>
 
+              {/* Shipping Route Information */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
+                <h3 className="font-semibold text-amber-900 mb-3 text-sm sm:text-base flex items-center">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Shipping Route
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Origin (From)</div>
+                    <div className="font-semibold text-amber-900 text-sm sm:text-base">{trackingResult.shippingInfo.from}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Destination (To)</div>
+                    <div className="font-semibold text-amber-900 text-sm sm:text-base">{trackingResult.shippingInfo.to}</div>
+                  </div>
+                </div>
+              </div>
+
               {/* Package Information */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
                 <div className="bg-gray-100 p-3 sm:p-4 rounded-lg">
@@ -302,23 +328,25 @@ const TrackingPage = () => {
                 Delivery Timeline
               </h2>
               <div className="relative">
-                {/* Connecting Line */}
-                <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-gray-200"></div>
+                {/* Connecting Line - Green for completed events */}
+                {trackingResult.timeline.length > 0 && (
+                  <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-green-500"></div>
+                )}
                 <div className="space-y-6">
                   {trackingResult.timeline.map((step, index) => (
                     <div key={index} className="relative flex items-start space-x-4">
                       {/* Status Icon with Line Connection */}
                       <div className="relative flex-shrink-0">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center relative z-10 ${
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center relative z-10 transition-all duration-300 ${
                           step.completed 
-                            ? 'bg-green-500 text-white shadow-lg' 
+                            ? 'bg-green-500 text-white shadow-lg ring-2 ring-green-200' 
                             : 'bg-gray-200 text-gray-500'
                         }`}>
                           {step.completed ? step.icon : <Clock className="h-6 w-6" />}
                         </div>
-                        {/* Connecting line to next item */}
+                        {/* Connecting line to next item - Green for completed events */}
                         {index < trackingResult.timeline.length - 1 && (
-                          <div className={`absolute top-12 left-1/2 transform -translate-x-1/2 w-0.5 h-6 ${
+                          <div className={`absolute top-12 left-1/2 transform -translate-x-1/2 w-0.5 h-6 transition-colors duration-300 ${
                             step.completed ? 'bg-green-500' : 'bg-gray-200'
                           }`}></div>
                         )}
@@ -336,7 +364,12 @@ const TrackingPage = () => {
                             {step.date} at {step.time}
                           </div>
                         </div>
-                        <p className="text-sm sm:text-base text-gray-600 mt-1">{step.location}</p>
+                        {step.location && (
+                          <p className="text-sm sm:text-base text-gray-600 mt-1 flex items-center">
+                            <MapPin className="h-4 w-4 mr-1.5 text-amber-600 flex-shrink-0" />
+                            <span>{step.location}</span>
+                          </p>
+                        )}
                         
                         {/* Proof of Delivery - Mobile Optimized */}
                         {step.proofOfDelivery && (

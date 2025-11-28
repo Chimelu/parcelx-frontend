@@ -69,23 +69,6 @@ const AdminPage = () => {
   // Calculate stats from orders data
   const calculateStats = () => {
     const totalOrders = orders.length;
-    
-    // Count orders by timeline status
-    const statusCounts = {
-      'Order Placed': 0,
-      'In Transit': 0,
-      'At Destination Hub': 0,
-      'Out for Delivery': 0,
-      'Delivered': 0
-    };
-
-    orders.forEach(order => {
-      const currentStatus = getCurrentStatus(order.timeline);
-      if (statusCounts.hasOwnProperty(currentStatus)) {
-        statusCounts[currentStatus]++;
-      }
-    });
-
     const uniqueCustomers = new Set(orders.map(order => order.customer)).size;
     const totalRevenue = orders.reduce((sum, order) => {
       const value = parseFloat(order.value?.replace(/[$,]/g, '')) || 0;
@@ -94,11 +77,6 @@ const AdminPage = () => {
 
     return [
       { label: 'Total Orders', value: totalOrders.toLocaleString(), icon: <Package className="h-6 w-6" />, color: 'bg-blue-500' },
-      { label: 'Order Placed', value: statusCounts['Order Placed'].toLocaleString(), icon: <Package className="h-6 w-6" />, color: 'bg-gray-500' },
-      { label: 'In Transit', value: statusCounts['In Transit'].toLocaleString(), icon: <Truck className="h-6 w-6" />, color: 'bg-yellow-500' },
-      { label: 'At Destination Hub', value: statusCounts['At Destination Hub'].toLocaleString(), icon: <Building2 className="h-6 w-6" />, color: 'bg-purple-500' },
-      { label: 'Out for Delivery', value: statusCounts['Out for Delivery'].toLocaleString(), icon: <Truck className="h-6 w-6" />, color: 'bg-orange-500' },
-      { label: 'Delivered', value: statusCounts['Delivered'].toLocaleString(), icon: <CheckCircle className="h-6 w-6" />, color: 'bg-green-500' },
       { label: 'Customers', value: uniqueCustomers.toLocaleString(), icon: <Users className="h-6 w-6" />, color: 'bg-indigo-500' },
       { label: 'Revenue', value: `$${totalRevenue.toLocaleString()}`, icon: <BarChart3 className="h-6 w-6" />, color: 'bg-pink-500' }
     ];
@@ -612,34 +590,6 @@ const AdminPage = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Timeline Breakdown */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-xl font-bold text-amber-900 mb-6">Order Status Breakdown</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                  {[
-                    { status: 'Order Placed', color: 'bg-gray-500', icon: <Package className="h-5 w-5" /> },
-                    { status: 'In Transit', color: 'bg-yellow-500', icon: <Truck className="h-5 w-5" /> },
-                    { status: 'At Destination Hub', color: 'bg-purple-500', icon: <Building2 className="h-5 w-5" /> },
-                    { status: 'Out for Delivery', color: 'bg-orange-500', icon: <Truck className="h-5 w-5" /> },
-                    { status: 'Delivered', color: 'bg-green-500', icon: <CheckCircle className="h-5 w-5" /> }
-                  ].map((item, index) => {
-                    const count = orders.filter(order => getCurrentStatus(order.timeline) === item.status).length;
-                    const percentage = orders.length > 0 ? ((count / orders.length) * 100).toFixed(1) : 0;
-                    
-                    return (
-                      <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`${item.color} w-12 h-12 rounded-full flex items-center justify-center text-white mx-auto mb-3`}>
-                          {item.icon}
-                        </div>
-                        <h4 className="font-semibold text-gray-900 mb-1">{item.status}</h4>
-                        <p className="text-2xl font-bold text-amber-900 mb-1">{count}</p>
-                        <p className="text-sm text-gray-600">{percentage}%</p>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
 
               {/* Recent Orders */}
