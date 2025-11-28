@@ -363,18 +363,12 @@ const AdminPage = () => {
   const openTimelineModal = (order) => {
     setSelectedOrderForTimeline(order);
     
-    // Get the location and date from the latest timeline event, or use defaults if no timeline
-    const latestTimelineEvent = order.timeline && order.timeline.length > 0 
-      ? order.timeline[order.timeline.length - 1] 
-      : null;
-    const currentLocation = latestTimelineEvent ? latestTimelineEvent.location : order.to;
-    const currentDate = latestTimelineEvent ? new Date(latestTimelineEvent.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-    
+    // Start with empty fields so user can type what they want
     setTimelineUpdate({
-      status: getCurrentStatus(order.timeline),
-      location: currentLocation,
+      status: '',
+      location: '',
       notes: '',
-      date: currentDate
+      date: new Date().toISOString().split('T')[0]
     });
     setIsTimelineModalOpen(true);
   };
