@@ -425,6 +425,11 @@ const AdminPage = () => {
         }
       };
 
+      // Include timeline if it was edited
+      if (updatedOrder.timeline && updatedOrder.timeline.length > 0) {
+        orderData.timeline = updatedOrder.timeline;
+      }
+
       // Find the order ID from the orders array (since we're using trackingId as ID)
       const orderToUpdate = orders.find(o => o.id === updatedOrder.id);
       if (!orderToUpdate) {
@@ -459,7 +464,10 @@ const AdminPage = () => {
           value: result.order.package.value,
           expectedDelivery: result.order.shipping.expectedDelivery,
           specialInstructions: result.order.package.specialInstructions,
-          timeline: result.order.timeline
+          // Use edited timeline if provided, otherwise use backend timeline
+          timeline: updatedOrder.timeline && updatedOrder.timeline.length > 0 
+            ? updatedOrder.timeline 
+            : (result.order.timeline || [])
         };
 
         // Update local state
@@ -715,162 +723,209 @@ const AdminPage = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900 mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading orders...</p>
                   </div>
+                ) : orders.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-600">No orders found</p>
+                  </div>
                 ) : (
                   <>
-                    {/* Desktop Table */}
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-amber-900 text-white">
-                      <tr>
-                        <th className="px-6 py-4 text-left">Order ID</th>
-                        <th className="px-6 py-4 text-left">Customer</th>
-                        <th className="px-6 py-4 text-left">Route</th>
-                        <th className="px-6 py-4 text-left">Status</th>
-                        <th className="px-6 py-4 text-left">Date</th>
-                        <th className="px-6 py-4 text-left">Value</th>
-                        <th className="px-6 py-4 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    {/* Desktop Table - Show on md and above */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <div className="min-w-full inline-block align-middle">
+                        <table className="w-full">
+                          <thead className="bg-amber-900 text-white">
+                            <tr>
+                              <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold">Order ID</th>
+                              <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold">Customer</th>
+                              <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold">Route</th>
+                              <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold">Status</th>
+                              <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold">Date</th>
+                              <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold">Value</th>
+                              <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {orders.map((order) => (
+                              <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                                  <div className="font-medium text-amber-900 text-xs md:text-sm break-all">{order.id}</div>
+                                </td>
+                                <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                                  <div className="text-xs md:text-sm truncate max-w-[120px] md:max-w-[150px] lg:max-w-none" title={order.customer}>
+                                    {order.customer}
+                                  </div>
+                                </td>
+                                <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                                  <div className="space-y-1.5 min-w-[140px]">
+                                    <input
+                                      type="text"
+                                      value={order.from}
+                                      onChange={(e) => handleUpdateOrderField(order.id, 'from', e.target.value)}
+                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                                      placeholder="From"
+                                    />
+                                    <div className="text-gray-500 text-center text-xs">→</div>
+                                    <input
+                                      type="text"
+                                      value={order.to}
+                                      onChange={(e) => handleUpdateOrderField(order.id, 'to', e.target.value)}
+                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                                      placeholder="To"
+                                    />
+                                  </div>
+                                </td>
+                                <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                                  <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getTimelineStatusColor(order.timeline)}`}>
+                                    {getTimelineStatusIcon(getCurrentStatus(order.timeline))}
+                                    <span className="hidden lg:inline">{getCurrentStatus(order.timeline)}</span>
+                                    <span className="lg:hidden">{getCurrentStatus(order.timeline).split(' ')[0]}</span>
+                                  </span>
+                                </td>
+                                <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                                  <input
+                                    type="date"
+                                    value={order.date}
+                                    onChange={(e) => handleUpdateOrderField(order.id, 'date', e.target.value)}
+                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent w-full max-w-[140px]"
+                                  />
+                                </td>
+                                <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                                  <div className="font-semibold text-amber-900 text-xs md:text-sm whitespace-nowrap">{order.value}</div>
+                                </td>
+                                <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                                  <div className="flex flex-wrap gap-1 md:gap-2">
+                                    <button 
+                                      onClick={() => handleViewOrder(order)}
+                                      className="p-1.5 md:p-1 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                                      title="View Details"
+                                    >
+                                      <Eye className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                    </button>
+                                    <button 
+                                      onClick={() => openTimelineModal(order)}
+                                      className="p-1.5 md:p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+                                      title="Update Timeline"
+                                    >
+                                      <History className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleEditOrder(order)}
+                                      className="p-1.5 md:p-1 text-yellow-600 hover:bg-yellow-100 rounded transition-colors"
+                                      title="Edit Order"
+                                    >
+                                      <Edit className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                    </button>
+                                    <button 
+                                      onClick={() => openDeleteModal(order)}
+                                      className="p-1.5 md:p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                      title="Delete Order"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Mobile/Tablet Cards - Show on screens smaller than md */}
+                    <div className="md:hidden space-y-3 p-3 sm:p-4">
                       {orders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 font-medium text-amber-900">{order.id}</td>
-                          <td className="px-6 py-4">{order.customer}</td>
-                          <td className="px-6 py-4">
-                            <div className="space-y-2">
+                        <div key={order.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow">
+                          {/* Header Row */}
+                          <div className="flex justify-between items-start mb-3 gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm sm:text-base font-semibold text-amber-900 truncate mb-1">{order.id}</div>
+                              <div className="text-xs sm:text-sm text-gray-500 truncate">{order.customer}</div>
+                            </div>
+                            <div className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+                              {getTimelineStatusIcon(getCurrentStatus(order.timeline))}
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getTimelineStatusColor(order.timeline)}`}>
+                                {getCurrentStatus(order.timeline)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Route Info - Editable */}
+                          <div className="mb-3 space-y-2">
+                            <div className="text-xs text-gray-600 font-medium">Route</div>
+                            <div className="space-y-1.5">
                               <input
                                 type="text"
                                 value={order.from}
                                 onChange={(e) => handleUpdateOrderField(order.id, 'from', e.target.value)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                                placeholder="From address"
                               />
-                              <div className="text-gray-500 text-center">→</div>
+                              <div className="text-center text-amber-600 text-xs">↓</div>
                               <input
                                 type="text"
                                 value={order.to}
                                 onChange={(e) => handleUpdateOrderField(order.id, 'to', e.target.value)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                                placeholder="To address"
                               />
                             </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getTimelineStatusColor(order.timeline)}`}>
-                              {getTimelineStatusIcon(getCurrentStatus(order.timeline))}
-                              <span>{getCurrentStatus(order.timeline)}</span>
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <input
-                              type="date"
-                              value={order.date}
-                              onChange={(e) => handleUpdateOrderField(order.id, 'date', e.target.value)}
-                              className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
-                            />
-                          </td>
-                          <td className="px-6 py-4 font-semibold text-amber-900">{order.value}</td>
-                          <td className="px-6 py-4">
+                          </div>
+
+                          {/* Date and Value Row */}
+                          <div className="flex justify-between items-center mb-3 gap-4">
+                            <div className="flex-1">
+                              <div className="text-xs text-gray-600 mb-1">Date</div>
+                              <input
+                                type="date"
+                                value={order.date}
+                                onChange={(e) => handleUpdateOrderField(order.id, 'date', e.target.value)}
+                                className="w-full px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-xs text-gray-600 mb-1">Value</div>
+                              <div className="text-sm sm:text-base font-semibold text-amber-900">{order.value}</div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                            <div className="text-xs text-gray-500">Actions</div>
                             <div className="flex space-x-2">
                               <button 
                                 onClick={() => handleViewOrder(order)}
-                                className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                                 title="View Details"
                               >
                                 <Eye className="h-4 w-4" />
                               </button>
                               <button 
                                 onClick={() => openTimelineModal(order)}
-                                className="p-1 text-green-600 hover:bg-green-100 rounded"
+                                className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
                                 title="Update Timeline"
                               >
                                 <History className="h-4 w-4" />
                               </button>
                               <button 
                                 onClick={() => handleEditOrder(order)}
-                                className="p-1 text-yellow-600 hover:bg-yellow-100 rounded"
+                                className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-lg transition-colors"
                                 title="Edit Order"
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button 
                                 onClick={() => openDeleteModal(order)}
-                                className="p-1 text-red-600 hover:bg-red-100 rounded"
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                                 title="Delete Order"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3 p-4">
-                  {orders.map((order) => (
-                    <div key={order.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-                      {/* Header Row */}
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-amber-900 truncate">{order.id}</div>
-                          <div className="text-xs text-gray-500">{order.customer}</div>
-                        </div>
-                        <div className="flex items-center space-x-2 ml-2">
-                          {getTimelineStatusIcon(getCurrentStatus(order.timeline))}
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTimelineStatusColor(order.timeline)}`}>
-                            {getCurrentStatus(order.timeline)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Route Info */}
-                      <div className="mb-3">
-                        <div className="text-xs text-gray-600 mb-1">Route</div>
-                        <div className="text-xs text-gray-800">
-                          <div className="truncate">{order.from}</div>
-                          <div className="text-center text-amber-600 py-1">↓</div>
-                          <div className="truncate">{order.to}</div>
-                        </div>
-                      </div>
-
-                      {/* Bottom Row */}
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm font-semibold text-amber-900">{order.value}</div>
-                        <div className="flex space-x-1">
-                          <button 
-                            onClick={() => handleViewOrder(order)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-100 rounded"
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => openTimelineModal(order)}
-                            className="p-1.5 text-green-600 hover:bg-green-100 rounded"
-                            title="Update Timeline"
-                          >
-                            <History className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleEditOrder(order)}
-                            className="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded"
-                            title="Edit Order"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => openDeleteModal(order)}
-                            className="p-1.5 text-red-600 hover:bg-red-100 rounded"
-                            title="Delete Order"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
                     </div>
-                  ))}
-                </div>
                   </>
                 )}
               </div>
@@ -1358,17 +1413,13 @@ const AdminPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-amber-900 mb-2">Timeline Event</label>
-                  <select
+                  <input
+                    type="text"
                     value={timelineUpdate.status}
                     onChange={(e) => setTimelineUpdate({...timelineUpdate, status: e.target.value})}
+                    placeholder="Enter timeline status"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                  >
-                    <option value="Order Placed">Order Placed</option>
-                    <option value="In Transit">In Transit</option>
-                    <option value="At Destination Hub">At Destination Hub</option>
-                    <option value="Out for Delivery">Out for Delivery</option>
-                    <option value="Delivered">Delivered</option>
-                  </select>
+                  />
                 </div>
 
                 <div>
@@ -1522,9 +1573,46 @@ const EditOrderForm = ({ order, onSave, onCancel }) => {
     specialInstructions: order.specialInstructions || '',
   });
 
+  const [timeline, setTimeline] = useState(
+    order.timeline && order.timeline.length > 0
+      ? order.timeline.map(event => ({
+          status: event.status || '',
+          location: event.location || '',
+          notes: event.notes || '',
+          date: event.date ? new Date(event.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          time: event.time || '00:00'
+        }))
+      : []
+  );
+
+  const handleTimelineChange = (index, field, value) => {
+    const updatedTimeline = [...timeline];
+    updatedTimeline[index] = { ...updatedTimeline[index], [field]: value };
+    setTimeline(updatedTimeline);
+  };
+
+  const handleAddTimelineEvent = () => {
+    setTimeline([...timeline, {
+      status: '',
+      location: '',
+      notes: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '00:00'
+    }]);
+  };
+
+  const handleRemoveTimelineEvent = (index) => {
+    setTimeline(timeline.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...order, ...formData });
+    // Format timeline dates properly for backend
+    const formattedTimeline = timeline.map(event => ({
+      ...event,
+      date: event.date ? new Date(event.date).toISOString() : new Date().toISOString()
+    }));
+    onSave({ ...order, ...formData, timeline: formattedTimeline });
   };
 
   return (
@@ -1657,6 +1745,96 @@ const EditOrderForm = ({ order, onSave, onCancel }) => {
             placeholder="Any special handling instructions or notes..."
           />
         </div>
+      </div>
+
+      {/* Timeline History - Editable */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-lg font-semibold text-amber-900">Timeline History</h4>
+          <button
+            type="button"
+            onClick={handleAddTimelineEvent}
+            className="btn-secondary flex items-center space-x-2 text-sm"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Event</span>
+          </button>
+        </div>
+        
+        {timeline.length > 0 ? (
+          <div className="space-y-4">
+            {timeline.map((event, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
+                <div className="flex justify-between items-center mb-3">
+                  <h5 className="font-medium text-amber-900">Event #{index + 1}</h5>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTimelineEvent(index)}
+                    className="text-red-600 hover:text-red-700 p-1"
+                    title="Remove event"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-amber-900 mb-2">Status</label>
+                    <input
+                      type="text"
+                      value={event.status}
+                      onChange={(e) => handleTimelineChange(index, 'status', e.target.value)}
+                      placeholder="e.g., Order Placed, In Transit"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-amber-900 mb-2">Location</label>
+                    <input
+                      type="text"
+                      value={event.location}
+                      onChange={(e) => handleTimelineChange(index, 'location', e.target.value)}
+                      placeholder="Current location"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-amber-900 mb-2">Date</label>
+                    <input
+                      type="date"
+                      value={event.date}
+                      onChange={(e) => handleTimelineChange(index, 'date', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-amber-900 mb-2">Time</label>
+                    <input
+                      type="time"
+                      value={event.time}
+                      onChange={(e) => handleTimelineChange(index, 'time', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-amber-900 mb-2">Notes (Optional)</label>
+                  <textarea
+                    rows={2}
+                    value={event.notes}
+                    onChange={(e) => handleTimelineChange(index, 'notes', e.target.value)}
+                    placeholder="Additional notes..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-gray-500 bg-white rounded-lg border border-gray-200">
+            <Clock className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <p className="text-sm">No timeline events. Click "Add Event" to create one.</p>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
