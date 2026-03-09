@@ -20,7 +20,7 @@ function App() {
 function AppContent() {
   useScrollToTop();
   const location = useLocation();
-  const isAdminPage = location.pathname === '/admin';
+  const isAdminPage = location.pathname === '/admin' || location.pathname === '/admin-page';
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -33,6 +33,7 @@ function AppContent() {
           <Route path="/tracking" element={<TrackingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin-page" element={<AdminPage isExternalAdmin={true} />} />
         </Routes>
       </main>
       {!isAdminPage && <Footer />}

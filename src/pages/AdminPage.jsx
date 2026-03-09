@@ -29,7 +29,7 @@ import { Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const AdminPage = () => {
+const AdminPage = ({ isExternalAdmin = false }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -58,8 +58,10 @@ const AdminPage = () => {
     dimensions: '',
     value: '',
     expectedDelivery: '',
-    specialInstructions: ''
-  });
+    specialInstructions: '',
+    imageUrl: '',
+    latitude: '',
+    longitude: ''  });
 
   const getCurrentStatus = (timeline) => {
     if (!timeline || timeline.length === 0) return 'Order Placed';
@@ -109,11 +111,19 @@ const AdminPage = () => {
     }
   };
 
+  // Base URL depends on internal vs external admin (for listing/updating orders)
+  const ordersBaseUrl = isExternalAdmin
+    ? 'https://parcelx-backend.vercel.app/api/orders/external'
+    : 'https://parcelx-backend.vercel.app/api/orders';
+
+  // Creating orders always uses main orders API; external admin is flagged in body
+  const createOrderUrl = 'https://parcelx-backend.vercel.app/api/orders';
+
   // Fetch all orders from API
   const fetchOrders = async () => {
     setIsLoadingOrders(true);
     try {
-      const response = await fetch('https://parcelx-backend.vercel.app/api/orders');
+      const response = await fetch(ordersBaseUrl);
       if (response.ok) {
         const data = await response.json();
         // Transform API data to match local state structure
@@ -131,6 +141,9 @@ const AdminPage = () => {
           value: order.package.value,
           expectedDelivery: order.shipping.expectedDelivery,
           specialInstructions: order.package.specialInstructions,
+          imageUrl: order.package.imageUrl || '',
+          latitude: order.package.location?.lat?.toString() || '',
+          longitude: order.package.location?.lng?.toString() || '',
           timeline: order.timeline
         }));
         setOrders(transformedOrders);
@@ -167,11 +180,20 @@ const AdminPage = () => {
           weight: newOrder.weight,
           dimensions: newOrder.dimensions,
           value: newOrder.value,
-          specialInstructions: newOrder.specialInstructions
-        }
+          specialInstructions: newOrder.specialInstructions,
+          imageUrl: newOrder.imageUrl || undefined,
+          location:
+            newOrder.latitude && newOrder.longitude
+              ? {
+                  lat: parseFloat(newOrder.latitude),
+                  lng: parseFloat(newOrder.longitude)
+                }
+              : undefined
+        },
+        isExternal: isExternalAdmin || undefined
       };
 
-      const response = await fetch('https://parcelx-backend.vercel.app/api/orders', {
+      const response = await fetch(createOrderUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -215,7 +237,10 @@ const AdminPage = () => {
           dimensions: '', 
           value: '', 
           expectedDelivery: '', 
-          specialInstructions: '' 
+          specialInstructions: '',
+          imageUrl: '',
+          latitude: '',
+          longitude: '' 
         });
         
         // Switch to orders tab to show the new order
@@ -250,7 +275,7 @@ const AdminPage = () => {
     if (!orderToDelete) return;
     
     try {
-      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/${orderToDelete.id}`, {
+      const response = await fetch(`${ordersBaseUrl}/${orderToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -281,7 +306,7 @@ const AdminPage = () => {
   const handleViewOrder = async (order) => {
     try {
       // Fetch full order details from API using tracking ID
-      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/track/${order.id}`);
+      const response = await fetch(`${ordersBaseUrl}/track/${order.id}`);
       if (response.ok) {
         const data = await response.json();
         // Transform API data to match local state structure
@@ -299,6 +324,9 @@ const AdminPage = () => {
           value: data.order.package.value,
           expectedDelivery: data.order.shipping.expectedDelivery,
           specialInstructions: data.order.package.specialInstructions,
+          imageUrl: data.order.package.imageUrl || '',
+          latitude: data.order.package.location?.lat?.toString() || '',
+          longitude: data.order.package.location?.lng?.toString() || '',
           timeline: data.order.timeline
         };
         setSelectedOrder(fullOrder);
@@ -323,7 +351,7 @@ const AdminPage = () => {
 
   const handleUpdateTimeline = async (orderId) => {
     try {
-      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/${orderId}/status`, {
+      const response = await fetch(`${ordersBaseUrl}/${orderId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -393,7 +421,15 @@ const AdminPage = () => {
           weight: updatedOrder.weight,
           dimensions: updatedOrder.dimensions,
           value: updatedOrder.value,
-          specialInstructions: updatedOrder.specialInstructions
+          specialInstructions: updatedOrder.specialInstructions,
+          imageUrl: updatedOrder.imageUrl || undefined,
+          location:
+            updatedOrder.latitude && updatedOrder.longitude
+              ? {
+                  lat: parseFloat(updatedOrder.latitude),
+                  lng: parseFloat(updatedOrder.longitude)
+                }
+              : undefined
         }
       };
 
@@ -410,7 +446,7 @@ const AdminPage = () => {
       }
 
       // Make API call to update the order
-      const response = await fetch(`https://parcelx-backend.vercel.app/api/orders/${orderToUpdate.id}`, {
+      const response = await fetch(`${ordersBaseUrl}/${orderToUpdate.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -436,6 +472,9 @@ const AdminPage = () => {
           value: result.order.package.value,
           expectedDelivery: result.order.shipping.expectedDelivery,
           specialInstructions: result.order.package.specialInstructions,
+          imageUrl: result.order.package.imageUrl || '',
+          latitude: result.order.package.location?.lat?.toString() || '',
+          longitude: result.order.package.location?.lng?.toString() || '',
           // Use edited timeline if provided, otherwise use backend timeline
           timeline: updatedOrder.timeline && updatedOrder.timeline.length > 0 
             ? updatedOrder.timeline 
@@ -1028,18 +1067,58 @@ const AdminPage = () => {
                         />
                       </div>
                     </div>
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-amber-900 mb-2">
-                        Package Value *
-                      </label>
-                      <input
-                        type="text"
-                        value={newOrder.value}
-                        onChange={(e) => setNewOrder({...newOrder, value: e.target.value})}
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                        placeholder="e.g., $150.00"
-                      />
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Package Value *
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.value}
+                          onChange={(e) => setNewOrder({...newOrder, value: e.target.value})}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="e.g., $150.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Parcel Image URL (Optional)
+                        </label>
+                        <input
+                          type="url"
+                          value={newOrder.imageUrl}
+                          onChange={(e) => setNewOrder({...newOrder, imageUrl: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="https://example.com/parcel.jpg"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Current Latitude (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.latitude}
+                          onChange={(e) => setNewOrder({...newOrder, latitude: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="e.g., 6.5244"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-amber-900 mb-2">
+                          Current Longitude (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={newOrder.longitude}
+                          onChange={(e) => setNewOrder({...newOrder, longitude: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="e.g., 3.3792"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1088,7 +1167,10 @@ const AdminPage = () => {
                         dimensions: '', 
                         value: '', 
                         expectedDelivery: '', 
-                        specialInstructions: '' 
+                        specialInstructions: '',
+                        imageUrl: '',
+                        latitude: '',
+                        longitude: '' 
                       })}
                       className="btn-secondary"
                     >
@@ -1515,6 +1597,9 @@ const EditOrderForm = ({ order, onSave, onCancel }) => {
     value: order.value || '',
     expectedDelivery: order.expectedDelivery || '',
     specialInstructions: order.specialInstructions || '',
+    imageUrl: order.imageUrl || '',
+    latitude: order.latitude || '',
+    longitude: order.longitude || '',
   });
 
   const [timeline, setTimeline] = useState(
@@ -1676,6 +1761,38 @@ const EditOrderForm = ({ order, onSave, onCancel }) => {
               value={formData.value}
               onChange={(e) => setFormData({...formData, value: e.target.value})}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Parcel Image URL (Optional)</label>
+            <input
+              type="url"
+              value={formData.imageUrl}
+              onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              placeholder="https://example.com/parcel.jpg"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Current Latitude (Optional)</label>
+            <input
+              type="text"
+              value={formData.latitude}
+              onChange={(e) => setFormData({...formData, latitude: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              placeholder="e.g., 6.5244"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-2">Current Longitude (Optional)</label>
+            <input
+              type="text"
+              value={formData.longitude}
+              onChange={(e) => setFormData({...formData, longitude: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              placeholder="e.g., 3.3792"
             />
           </div>
         </div>
