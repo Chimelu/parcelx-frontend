@@ -59,9 +59,10 @@ const AdminPage = ({ isExternalAdmin = false }) => {
     value: '',
     expectedDelivery: '',
     specialInstructions: '',
-    imageUrl: '',
+    imageFile: null,
     latitude: '',
-    longitude: ''  });
+    longitude: ''
+  });
 
   const getCurrentStatus = (timeline) => {
     if (!timeline || timeline.length === 0) return 'Order Placed';
@@ -111,10 +112,8 @@ const AdminPage = ({ isExternalAdmin = false }) => {
     }
   };
 
-  // Base URL depends on internal vs external admin (for listing/updating orders)
-  const ordersBaseUrl = isExternalAdmin
-    ? 'https://parcelx-backend.vercel.app/api/orders/external'
-    : 'https://parcelx-backend.vercel.app/api/orders';
+  // Base URL for orders; filtering by isExternal is done via query param on list
+  const ordersBaseUrl = 'https://parcelx-backend.vercel.app/api/orders';
 
   // Creating orders always uses main orders API; external admin is flagged in body
   const createOrderUrl = 'https://parcelx-backend.vercel.app/api/orders';
@@ -123,7 +122,9 @@ const AdminPage = ({ isExternalAdmin = false }) => {
   const fetchOrders = async () => {
     setIsLoadingOrders(true);
     try {
-      const response = await fetch(ordersBaseUrl);
+      const response = await fetch(
+        `${ordersBaseUrl}?isExternal=${isExternalAdmin ? 'true' : 'false'}`
+      );
       if (response.ok) {
         const data = await response.json();
         // Transform API data to match local state structure
@@ -163,42 +164,49 @@ const AdminPage = ({ isExternalAdmin = false }) => {
     setIsCreatingOrder(true);
     
     try {
-      const orderData = {
-        customer: {
-          name: newOrder.customer,
-          email: newOrder.customerEmail,
-          phone: newOrder.customerPhone,
-          address: newOrder.from // Using 'from' as customer address for now
-        },
-        shipping: {
-          from: newOrder.from,
-          to: newOrder.to,
-          expectedDelivery: newOrder.expectedDelivery
-        },
-        package: {
-          type: newOrder.packageType,
-          weight: newOrder.weight,
-          dimensions: newOrder.dimensions,
-          value: newOrder.value,
-          specialInstructions: newOrder.specialInstructions,
-          imageUrl: newOrder.imageUrl || undefined,
-          location:
-            newOrder.latitude && newOrder.longitude
-              ? {
-                  lat: parseFloat(newOrder.latitude),
-                  lng: parseFloat(newOrder.longitude)
-                }
-              : undefined
-        },
-        isExternal: isExternalAdmin || undefined
+      const customerData = {
+        name: newOrder.customer,
+        email: newOrder.customerEmail,
+        phone: newOrder.customerPhone,
+        address: newOrder.from // Using 'from' as customer address for now
       };
+
+      const shippingData = {
+        from: newOrder.from,
+        to: newOrder.to,
+        expectedDelivery: newOrder.expectedDelivery
+      };
+
+      const packageData = {
+        type: newOrder.packageType,
+        weight: newOrder.weight,
+        dimensions: newOrder.dimensions,
+        value: newOrder.value,
+        specialInstructions: newOrder.specialInstructions,
+        location:
+          newOrder.latitude && newOrder.longitude
+            ? {
+                lat: parseFloat(newOrder.latitude),
+                lng: parseFloat(newOrder.longitude),
+                name: newOrder.to || 'Destination'
+              }
+            : undefined
+      };
+
+      const formData = new FormData();
+
+      if (newOrder.imageFile) {
+        formData.append('image', newOrder.imageFile);
+      }
+
+      formData.append('customer', JSON.stringify(customerData));
+      formData.append('shipping', JSON.stringify(shippingData));
+      formData.append('package', JSON.stringify(packageData));
+      formData.append('isExternal', isExternalAdmin ? 'true' : 'false');
 
       const response = await fetch(createOrderUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
+        body: formData
       });
 
       if (response.ok) {
@@ -238,7 +246,7 @@ const AdminPage = ({ isExternalAdmin = false }) => {
           value: '', 
           expectedDelivery: '', 
           specialInstructions: '',
-          imageUrl: '',
+          imageFile: null,
           latitude: '',
           longitude: '' 
         });
@@ -1083,14 +1091,18 @@ const AdminPage = ({ isExternalAdmin = false }) => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-amber-900 mb-2">
-                          Parcel Image URL (Optional)
+                          Parcel Image (Optional)
                         </label>
                         <input
-                          type="url"
-                          value={newOrder.imageUrl}
-                          onChange={(e) => setNewOrder({...newOrder, imageUrl: e.target.value})}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                          placeholder="https://example.com/parcel.jpg"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            setNewOrder({
+                              ...newOrder,
+                              imageFile: e.target.files && e.target.files[0] ? e.target.files[0] : null,
+                            })
+                          }
+                          className="w-full text-sm text-gray-700 file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-yellow-500 file:text-amber-900 hover:file:bg-yellow-400 cursor-pointer"
                         />
                       </div>
                     </div>
@@ -1168,7 +1180,7 @@ const AdminPage = ({ isExternalAdmin = false }) => {
                         value: '', 
                         expectedDelivery: '', 
                         specialInstructions: '',
-                        imageUrl: '',
+                        imageFile: null,
                         latitude: '',
                         longitude: '' 
                       })}
