@@ -1610,6 +1610,7 @@ const EditOrderForm = ({ order, onSave, onCancel }) => {
     expectedDelivery: order.expectedDelivery || '',
     specialInstructions: order.specialInstructions || '',
     imageUrl: order.imageUrl || '',
+    imageFile: null,
     latitude: order.latitude || '',
     longitude: order.longitude || '',
   });
@@ -1778,14 +1779,25 @@ const EditOrderForm = ({ order, onSave, onCancel }) => {
         </div>
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-amber-900 mb-2">Parcel Image URL (Optional)</label>
+            <label className="block text-sm font-medium text-amber-900 mb-2">
+              Parcel Image (Optional)
+            </label>
             <input
-              type="url"
-              value={formData.imageUrl}
-              onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-              placeholder="https://example.com/parcel.jpg"
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  imageFile: e.target.files && e.target.files[0] ? e.target.files[0] : null,
+                })
+              }
+              className="w-full text-sm text-gray-700 file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-yellow-500 file:text-amber-900 hover:file:bg-yellow-400 cursor-pointer"
             />
+            {order.imageUrl && (
+              <p className="mt-1 text-xs text-gray-500">
+                Current image is already set. Uploading a new file will replace it.
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-amber-900 mb-2">Current Latitude (Optional)</label>
